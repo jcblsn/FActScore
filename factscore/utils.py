@@ -86,7 +86,7 @@ def convert_model_to_int8_on_gpu(model, device):
     """
     Quantize a model to int8 and move it to GPU using a simple method.
     """
-    if 'cuda' not in device:
+    if 'cuda' not in device or 'mps' not in device:
         raise ValueError(f"Target device should be a gpu. Device {device} is not supported")
 
     model.half()

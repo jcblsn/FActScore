@@ -7,6 +7,8 @@ from transformers import AutoModelForMaskedLM, AutoTokenizer
 from factscore.lm import LM
 from factscore.retrieval import Retrieval
 
+device = torch.device('mps')
+
 def softmax(x):
     return(np.exp(x - np.max(x)) / np.exp(x - np.max(x)).sum())
 
@@ -30,7 +32,7 @@ class NPM(LM):
 
     def load_model(self):
         self.model = AutoModelForMaskedLM.from_pretrained("facebook/" + self.model_name)
-        self.model.cuda()
+        self.model.to(device)
         self.model.eval()
 
     def save_cache(self):
@@ -68,8 +70,8 @@ class NPM(LM):
         all_input_ids, all_attention_mask = self.tokenize(texts, skip_special_tokens=skip_special_tokens)
         
         with torch.no_grad():
-            outputs = self.model(all_input_ids.cuda(),
-                                 all_attention_mask.cuda(),
+            outputs = self.model(all_input_ids.to(device),
+                                 all_attention_mask.to(device),
                                  output_hidden_states=True,
                                  return_dict=True)
             all_logits = outputs["logits"].detach().cpu().numpy()
@@ -159,7 +161,3 @@ class NPM(LM):
             self.add_n += 1
 
         return self.cache_dict[cache_key]
-
-
-
-        

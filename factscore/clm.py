@@ -19,6 +19,8 @@ from transformers import LlamaTokenizer
 from factscore.utils import convert_model_to_int8_on_gpu
 from factscore.lm import LM
 
+device = torch.device('mps')
+
 class CLM(LM):
     def __init__(self, model_name, model_dir, cache_file=None):
         self.model_name = model_name
@@ -28,7 +30,8 @@ class CLM(LM):
 
     def load_model(self):
         self.model = AutoModelForCausalLM.from_pretrained(self.model_dir)
-        self.model = convert_model_to_int8_on_gpu(self.model, device='cuda')
+        # self.model = convert_model_to_int8_on_gpu(self.model, device='cuda')
+        self.model = convert_model_to_int8_on_gpu(self.model, device='mps')
         self.tokenizer = LlamaTokenizer.from_pretrained(self.model_dir)
 
     def _generate(self, prompts, max_sequence_length=2048, max_output_length=128,
@@ -46,7 +49,8 @@ class CLM(LM):
         for curr_input_ids in input_ids:
             if len(curr_input_ids) > max_sequence_length - max_output_length:
                 curr_input_ids = curr_input_ids[-(max_sequence_length - max_output_length):]
-            curr_input_ids = torch.LongTensor([curr_input_ids]).cuda()
+            # curr_input_ids = torch.LongTensor([curr_input_ids]).cuda()
+            curr_input_ids = torch.LongTensor([curr_input_ids]).to(device)
             gen_outputs = self.model.generate(
                 curr_input_ids,
                 max_length=curr_input_ids.shape[1]+max_output_length,
@@ -78,4 +82,3 @@ class CLM(LM):
             return generations[0], scores[0]
         
         return generations, scores
-

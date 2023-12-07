@@ -8,6 +8,9 @@ import pickle as pkl
 
 from rank_bm25 import BM25Okapi
 
+import torch
+device = torch.device('mps')
+
 SPECIAL_SEPARATOR = "####SPECIAL####SEPARATOR####"
 MAX_LENGTH = 256
 
@@ -126,7 +129,7 @@ class Retrieval(object):
     def load_encoder(self):
         from sentence_transformers import SentenceTransformer
         encoder = SentenceTransformer("sentence-transformers/" + self.retrieval_type)
-        encoder = encoder.cuda()
+        encoder = encoder.to(device)
         encoder = encoder.eval()
         self.encoder = encoder
         assert self.batch_size is not None
