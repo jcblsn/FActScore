@@ -49,7 +49,6 @@ for title in prompt_titles:
 
 with open("api.key", 'r') as f:
     api_key = f.readline()
-openai.api_key = api_key.strip()
 
 responses = []
 for ptitle, prompt in tqdm.tqdm(zip(prompt_titles, prompts_list)):

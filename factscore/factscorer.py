@@ -240,7 +240,7 @@ class FactScorer(object):
                     is_supported = true_score > false_score
                 else:
                     # when logits are unavailable
-                    generated_answer = output[0].lower()
+                    generated_answer = output[0].message.content.lower()
                     if "true" in generated_answer or "false" in generated_answer:
                         if "true" in generated_answer and "false" not in generated_answer:
                             is_supported = True

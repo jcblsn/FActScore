@@ -1,5 +1,8 @@
 from factscore.lm import LM
 import openai
+from openai import OpenAI
+
+client = OpenAI()
 import sys
 import time
 import os
@@ -21,7 +24,6 @@ class OpenAIModel(LM):
         assert os.path.exists(key_path), f"Please place your OpenAI APT Key in {key_path}."
         with open(key_path, 'r') as f:
             api_key = f.readline()
-        openai.api_key = api_key.strip()
         self.model = self.model_name
 
     def _generate(self, prompt, max_sequence_length=2048, max_output_length=128):
@@ -35,13 +37,13 @@ class OpenAIModel(LM):
             # Call API
             response = call_ChatGPT(message, temp=self.temp, max_len=max_sequence_length)
             # Get the output from the response
-            output = response["choices"][0]["message"]["content"]
+            output = response.choices[0]
             return output, response
         elif self.model_name == "InstructGPT":
             # Call API
             response = call_GPT3(prompt, temp=self.temp)
             # Get the output from the response
-            output = response["choices"][0]["text"]
+            output = response.choices[0]
             return output, response
         else:
             raise NotImplementedError()
@@ -53,7 +55,7 @@ def call_ChatGPT(message, model_name="gpt-3.5-turbo", max_len=1024, temp=0.7, ve
     num_rate_errors = 0
     while not received:
         try:
-            response = openai.ChatCompletion.create(model=model_name,
+            response = client.chat.completions.create(model=model_name,
                                                     messages=message,
                                                     max_tokens=max_len,
                                                     temperature=temp)
@@ -62,7 +64,7 @@ def call_ChatGPT(message, model_name="gpt-3.5-turbo", max_len=1024, temp=0.7, ve
             # print(message)
             num_rate_errors += 1
             error = sys.exc_info()[0]
-            if error == openai.error.InvalidRequestError:
+            if error == openai.InvalidRequestError:
                 # something is wrong: e.g. prompt too long
                 logging.critical(f"InvalidRequestError\nPrompt passed in:\n\n{message}\n\n")
                 assert False
@@ -79,7 +81,7 @@ def call_GPT3(prompt, model_name="text-davinci-003", max_len=512, temp=0.7, num_
     num_rate_errors = 0
     while not received:
         try:
-            response = openai.Completion.create(model=model_name,
+            response = client.completions.create(model=model_name,
                                                 prompt=prompt,
                                                 max_tokens=max_len,
                                                 temperature=temp,
@@ -89,7 +91,7 @@ def call_GPT3(prompt, model_name="text-davinci-003", max_len=512, temp=0.7, num_
         except:
             error = sys.exc_info()[0]
             num_rate_errors += 1
-            if error == openai.error.InvalidRequestError:
+            if error == openai.InvalidRequestError:
                 # something is wrong: e.g. prompt too long
                 logging.critical(f"InvalidRequestError\nPrompt passed in:\n\n{prompt}\n\n")
                 assert False
